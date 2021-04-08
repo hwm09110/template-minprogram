@@ -1,0 +1,38 @@
+// 显示n行文本，多出省略号显示
+@mixin single-ellipsis() {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+// 显示n行文本，多出省略号显示
+@mixin mutil-ellipsis($n:2) {
+  word-break: break-all;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: $n;
+  overflow: hidden;
+}
+
+// 标题文字下划线
+@mixin text-underline() {
+  font-size: 28rpx;
+  font-family: PingFangSC-Semibold, PingFang SC;
+  font-weight: 600;
+  color: #222222;
+  position: relative;
+  display: inline-block;
+  &::after{
+    position: absolute;
+    left: -4%;
+    bottom: 2rpx;
+    content: '';
+    width: 108%;
+    height: 16rpx;
+    border-radius: 8rpx;
+    background-color: $theme_color;
+    opacity: 0.3;
+    z-index: 0;
+  }
+}

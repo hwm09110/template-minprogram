@@ -1,0 +1,165 @@
+<template>
+  <view class="custom-nav-bar-wrap" style="height:{{barWrapHeight}}px;">
+    <view
+      class="custom-nav-bar-inner"
+      wx:if="{{showCustomNav}}"
+      style="padding-top:{{statusBarHeight}}px; height:{{titleBarHeight}}px; background-color:{{background}}">
+      <view class="main-box">
+        <view class="left-box">
+          <image class="go-back" bindtap="goBack" wx:if="{{showBackBtn}}" src="../assets/img/component/nav_icon_back@2x.png" />
+          <text class="div-line" wx:if="{{showBackBtn && showHomeBtn}}"></text>
+          <image class="home-icon" bindtap="goHome" wx:if="{{showHomeBtn}}" style="margin-left:{{!showBackBtn?'18rpx':'0'}}" src="../assets/img/component/common_icon_home@2x.png" />
+        </view>
+        <text class="title" style="color:{{fontColor}}">{{title}}</text>
+      </view>
+    </view>
+  </view>
+</template>
+
+<script>
+import { createComponent } from '@mpxjs/core'
+
+createComponent({
+  properties: {
+    title: {
+      type: String,
+      value: ''
+    },
+    background: {
+      type: String,
+      value: '#fff'
+    },
+    fontColor: {
+      type: String,
+      value: '#333'
+    },
+    // 是否代理返回按钮事件
+    proxyGoBack: {
+      type: Boolean,
+      value: false
+    },
+    // 是否显示返回首页按钮
+    showHomeBtn: {
+      type: Boolean,
+      value: true
+    },
+  },
+  data: {
+    showBackBtn: true, // 是否显示返回按钮
+    barWrapHeight: 68, //导航栏wrap高度
+    statusBarHeight: 20, //默认：20px 刘海屏：40px
+    titleBarHeight: 44, //安卓：44px iOS：48px
+    isIpx: false, //是否是iPhone X
+    showCustomNav: false, //是否可以使用自定义导航
+  },
+  methods: {
+    // 返回首页
+    goHome() {
+      wx.switchTab({
+        url: '/pages/index/index'
+      })
+    },
+
+    // 返回上一页
+    goBack() {
+      if(this.proxyGoBack) {
+        this.triggerEvent('goBack', {});
+      }else{
+        wx.navigateBack({
+          delta: 1
+        });
+      }
+    }
+  },
+  attached() {
+    let appInstance = getApp();
+    let { isIpx, canUseCustomNav, systemInfo } = appInstance.globalData;
+
+    this.isIpx = isIpx;
+    this.showCustomNav = canUseCustomNav;
+
+    if(systemInfo) {
+      console.log(this.statusBarHeight);
+      let { model, statusBarHeight, system } = systemInfo;
+
+      this.statusBarHeight = statusBarHeight;
+      if (model.search('iPhone X') !== -1){
+        this.statusBarHeight = 40;
+      }
+      if(system.search('iOS') !== -1){
+        this.titleBarHeight = 48;
+      }
+    }
+
+    if(canUseCustomNav) {
+      this.barWrapHeight = this.statusBarHeight + this.titleBarHeight;
+    }else{
+      this.barWrapHeight = 0; //不支持自定义导航栏时
+    }
+
+    this.showBackBtn = getCurrentPages().length > 1 ? true : false;
+  }
+})
+</script>
+
+<script type="application/json">
+  {
+    "component": true
+  }
+</script>
+
+<style lang="scss">
+.custom-nav-bar-wrap{
+  .custom-nav-bar-inner{
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    background-color: #fff;
+    z-index: 999999;
+    .main-box{
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 170rpx;
+      height: 100%;
+      .left-box{
+        position: absolute;
+        left: 10rpx;
+        top:50%;
+        transform: translateY(-50%);
+        font-size: 0;
+        display: flex;
+        align-items: center;
+        .go-back,
+        .home-icon{
+          width: 44rpx;
+          height: 44rpx;
+          padding: 16rpx 10rpx;
+        }
+        .go-back{
+          padding-right: 20rpx;
+        }
+        .div-line{
+          width:2rpx;
+          height:50rpx;
+          background:#ddd;
+          margin-right: 20rpx;
+        }
+      }
+      .title{
+        display: block;
+        font-size:30rpx;
+        font-family:PingFangSC-Medium,PingFang SC;
+        font-weight:500;
+        color: #333;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
+      }
+    }
+  }
+}
+</style>
+

@@ -1,0 +1,23 @@
+<template>
+  <block>
+    <web-view src="{{pageUrl}}"></web-view>
+  </block>
+</template>
+
+<script>
+  import { createPage } from '@mpxjs/core'
+
+  createPage({
+    data: {
+      pageUrl: 'https://www.baokaodaxue.com/bkdx/miniprogram/show'
+    },
+    onLoad () {
+    },
+  })
+</script>
+
+<script name="json">
+  module.exports = {
+    navigationBarTitleText: '用户协议'
+  }
+</script>

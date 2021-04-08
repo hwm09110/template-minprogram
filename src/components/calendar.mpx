@@ -1,0 +1,331 @@
+<template>
+  <view class="calendar-wrap">
+    <view class="weeks">
+      <view class="week-item" wx:for="{{weeks}}" wx:key="unique">{{ item }}</view>
+    </view>
+    <view class="days">
+      <view class="day-item prev-month-day" wx:for="{{prevMonthDays}}" wx:key="unique">{{
+        showPrevNextMonthDays ? item.day : ''
+      }}</view>
+      <view
+        class="day-item {{ item.curDate ? 'today' : '' }} {{ item.checked ? 'selected' : '' }}"
+        wx:for="{{curMonthDays}}"
+        wx:key="unique"
+        bindtap="handleSelectDay(item)"
+      >
+        {{ item.day }}
+        <view class="dot gray" wx:if="{{ item.hasGrayPoint }}"></view>
+        <view class="dot red" wx:if="{{ item.hasRedPoint }}"></view>
+      </view>
+      <view
+        class="day-item next-month-day"
+        wx:if="{{showPrevNextMonthDays}}"
+        wx:for="{{nextMonthDays}}"
+        wx:key="unique"
+        >{{ showPrevNextMonthDays ? item.day : '' }}</view
+      >
+    </view>
+  </view>
+</template>
+
+<script>
+import { createComponent } from '@mpxjs/core';
+
+createComponent({
+  properties: {
+    // 是否显示上下个月份的日期
+    showPrevNextMonthDays: {
+      type: Boolean,
+      value: false
+    },
+    // 日期格式 YYYY-MM-DD
+    setDate: {
+      type: String,
+      value: `${new Date().getFullYear()}-${new Date().getMonth() + 1}`
+    },
+    //带灰点标记日期
+    markGrayPoint: {
+      type: Array,
+      value: [] // [number, number]
+    },
+    //带红点标记日期
+    markRedPoint: {
+      type: Array,
+      value: [] // [number, number]
+    }
+  },
+  data: {
+    weeks: ['周日', '周一', '周二', '周三', '周四', '周五', '周六'],
+    daysCount: 42, //总展示天数
+    //当前月份日期
+    curMonthDays: [],
+    //当前月份的前一个月日期
+    prevMonthDays: [],
+    //当前月份的下一个月日期
+    nextMonthDays: [],
+
+    // 当前日期
+    currentYear: new Date().getFullYear(),
+    currentMonth: new Date().getMonth() + 1,
+    currentDate: new Date().getDate(),
+
+    //当天之后日期禁用
+    disabledCurDateNext: false,
+
+    // 切换年月
+    switchYear: '',
+    switchMonth: ''
+  },
+  watch: {
+    setDate(newVal) {
+      if (newVal) {
+        let dateInfo = newVal.split('-');
+        this.switchYear = dateInfo[0];
+        this.switchMonth = dateInfo[1];
+        this.renderDays(this.switchYear, this.switchMonth);
+      }
+    },
+    markGrayPoint(newVal) {
+      this.renderDays(this.switchYear, this.switchMonth);
+    },
+    markRedPoint(newVal) {
+      this.renderDays(this.switchYear, this.switchMonth);
+    }
+  },
+  created() {
+    this.init();
+  },
+  methods: {
+    init() {
+      if (!this.setDate) return;
+      let dateInfo = this.setDate.split('-');
+      this.switchYear = dateInfo[0];
+      this.switchMonth = dateInfo[1];
+      this.renderDays(this.switchYear, this.switchMonth);
+    },
+
+    formatNum(num) {
+      return num < 10 ? `0${num}` : num;
+    },
+
+    //获取上一个月
+    getPrevYearAndMonth(nowYear, nowMonth) {
+      let prevMonth = nowMonth - 1 > 0 ? nowMonth - 1 : 12;
+      let prevYear = prevMonth == 12 ? nowYear - 1 : nowYear;
+      return { prevYear, prevMonth };
+    },
+
+    //获取下一个月
+    getNextYearAndMonth(nowYear, nowMonth) {
+      let nextMonth = +nowMonth + 1 <= 12 ? +nowMonth + 1 : 1;
+      let nextYear = nextMonth == 1 ? nowYear + 1 : nowYear;
+      return { nextYear, nextMonth };
+    },
+
+    //切换上个月
+    handlePrevMonth() {
+      let { prevYear, prevMonth } = this.getPrevYearAndMonth(
+        this.switchYear,
+        this.switchMonth
+      );
+
+      this.switchYear = prevYear;
+      this.switchMonth = this.formatNum(prevMonth);
+      this.renderDays(prevYear, prevMonth);
+    },
+
+    //切换下个月
+    handleNextMonth() {
+      let { nextYear, nextMonth } = this.getNextYearAndMonth(
+        this.switchYear,
+        this.switchMonth
+      );
+
+      this.switchYear = nextYear;
+      this.switchMonth = this.formatNum(nextMonth);
+      this.renderDays(nextYear, nextMonth);
+    },
+
+    //点击选择日期
+    handleSelectDay(dayItem) {
+      const { year, month, day } = dayItem;
+      console.log(`${year}-${month}-${day}`);
+
+      if (dayItem.checked !== undefined && !dayItem.disabled) {
+        this.curMonthDays.forEach((item) => {
+          if (item.day == dayItem.day) {
+            item.checked = true;
+          } else {
+            item.checked = false;
+          }
+        });
+      }
+      this.triggerEvent('selectDate', dayItem);
+    },
+
+    //获取某年某月有几天
+    getMonthDayCount(year, month) {
+      return new Date(year, month, 0).getDate();
+    },
+
+    //获取某年某月1号是星期几
+    getWeekOfFistDate(year, month) {
+      return new Date(`${year}/${month}/1`).getDay();
+    },
+
+    // 生成渲染日期
+    renderDays(year, month) {
+      let curDateWeek = this.getWeekOfFistDate(year, month);
+      console.log('当月1号星期几:' + this.weeks[curDateWeek] + ',' + curDateWeek);
+
+      let { prevYear, prevMonth } = this.getPrevYearAndMonth(year, month);
+      let { nextYear, nextMonth } = this.getNextYearAndMonth(year, month);
+
+      let curMonthLen = this.getMonthDayCount(year, month);
+      let prevMonthLen = this.getMonthDayCount(prevYear, prevMonth);
+      let nextMonthLen = this.getMonthDayCount(nextYear, nextMonth);
+
+      let curMonthNumber = Array.from({ length: curMonthLen }, (i, n) => n + 1);
+      let prevMonthNumber = Array.from({ length: prevMonthLen }, (i, n) => n + 1);
+      let nextMonthNumber = Array.from({ length: nextMonthLen }, (i, n) => n + 1);
+
+      this.curMonthDays = curMonthNumber.map((item) => {
+        let isDisabled = false;
+        if (this.disabledCurDateNext) {
+          if (
+            this.currentYear == year &&
+            this.currentMonth == month &&
+            item > this.currentDate
+          ) {
+            isDisabled = true;
+          } else if (this.currentYear == year && this.currentMonth < month) {
+            isDisabled = true;
+          } else if (this.currentYear < year) {
+            isDisabled = true;
+          }
+        }
+        return {
+          year,
+          month,
+          day: item,
+          key: `cur${item}`,
+          checked: false,
+          curDate:
+            this.currentYear == year &&
+            this.currentMonth == month &&
+            item == this.currentDate
+              ? true
+              : false,
+          disabled: isDisabled,
+          // 设置灰点、红点
+          hasGrayPoint: this.markGrayPoint.includes(item),
+          hasRedPoint: this.markRedPoint.includes(item)
+        };
+      });
+
+      this.prevMonthDays =
+        curDateWeek > 0
+          ? prevMonthNumber.slice(-curDateWeek).map((item) => {
+              return {
+                year: prevYear,
+                month: prevMonth,
+                day: item,
+                key: `prev${item}`
+              };
+            })
+          : [];
+
+      this.nextMonthDays = nextMonthNumber
+        .slice(0, this.daysCount - curMonthLen - curDateWeek)
+        .map((item) => {
+          return {
+            year: nextYear,
+            month: nextMonth,
+            day: item,
+            key: `next${item}`
+          };
+        });
+      // console.log('渲染prev:',this.prevMonthDays)
+      // console.log('渲染cur:',this.curMonthDays)
+      // console.log('渲染next:',this.nextMonthDays)
+    }
+  }
+});
+</script>
+
+<script type="application/json">
+{
+  "component": true
+}
+</script>
+
+<style lang="scss">
+@import '../assets/scss/index.scss';
+.calendar-wrap {
+  padding-left: 13rpx;
+  padding-right: 33rpx;
+  .weeks {
+    display: flex;
+    .week-item {
+      width: 72rpx;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font-size: 26rpx;
+      font-family: PingFangSC-Regular, PingFang SC;
+      font-weight: 400;
+      color: #888888;
+      margin-left: 20rpx;
+      padding-top: 22rpx;
+      padding-bottom: 24rpx;
+    }
+  }
+  .days {
+    display: flex;
+    flex-wrap: wrap;
+    .day-item {
+      position: relative;
+      width: 72rpx;
+      height: 72rpx;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font-size: 32rpx;
+      font-family: PingFangSC-Regular, PingFang SC;
+      font-weight: 400;
+      color: #444;
+      margin-left: 20rpx;
+      margin-bottom: 20rpx;
+      &.today {
+        background-color: #e8ecff;
+        border-radius: 10rpx;
+      }
+      &.selected {
+        background-color: #6149f1;
+        border-radius: 10rpx;
+        color: #fff;
+      }
+      &.prev-month-day,
+      &.next-month-day {
+        color: #bbb;
+      }
+      .dot {
+        position: absolute;
+        top: 8rpx;
+        right: 8rpx;
+        width: 12rpx;
+        height: 12rpx;
+        border-radius: 100%;
+        &.gray {
+          background-color: #aaa;
+        }
+        &.red {
+          background-color: #ff4444;
+        }
+      }
+    }
+  }
+}
+</style>

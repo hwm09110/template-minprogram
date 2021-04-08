@@ -1,0 +1,97 @@
+<template>
+  <view class="offnetword-tips" hidden="{{!visible}}">
+    <image class="img" src="../assets/img/component/offnetwork/anomalous_icon.png" />
+    <view class="text" wx:if="{{content != ''}}">{{content}}</view>
+    <button class="refresh-btn" bindtap="handleRefresh">刷新</button>
+  </view>
+</template>
+
+<script>
+import { createComponent } from '@mpxjs/core'
+import store from '../store/index.js'
+
+createComponent({
+  properties: {
+    content: {
+      type: String,
+      value: '当前网络不稳定，请检查网络设置'
+    },
+    value: {
+      type: Boolean,
+      value: false
+    }
+  },
+  watch:{
+    value(newVal) {
+      this.visible = newVal;
+      if(newVal) {
+        store.state.hasOpenOffNetworkTips = true;
+      }else{
+        store.state.hasOpenOffNetworkTips = false;
+      }
+    }
+  },
+  data() {
+    return {
+      visible: false
+    }
+  },
+  methods: {
+    // 刷新
+    handleRefresh() {
+      store.state.isShowOffNetworkTips = false;
+      this.triggerEvent("input", { value: false });
+      this.triggerEvent("refresh", "");
+    }
+  },
+  attached() {
+  }
+})
+</script>
+
+<script type="application/json">
+  {
+    "component": true
+  }
+</script>
+
+<style lang="scss">
+.offnetword-tips{
+  padding: 400rpx 60rpx 60rpx;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 9999999;
+  width: 100vw;
+  height: 100vh;
+  background-color: #F6F8FA;
+  box-sizing: border-box;
+  text-align: center;
+  .img{
+    width: 266rpx;
+    height:220rpx;
+  }
+  .text{
+    font-size: 28rpx;
+    font-family: PingFangSC-Regular, PingFang SC;
+    font-weight: 400;
+    color: #AAAAAA;
+    line-height: 28rpx;
+  }
+  .refresh-btn{
+    display: inline-block;
+    width: 180rpx;
+    height: 68rpx;
+    line-height: 68rpx;
+    text-align: center;
+    background: #6149F1;
+    border-radius: 34rpx;
+    font-size: 28rpx;
+    font-family: PingFangSC-Medium, PingFang SC;
+    font-weight: 500;
+    color: #FFFFFF;
+    margin-top: 50rpx;
+  }
+}
+</style>
+

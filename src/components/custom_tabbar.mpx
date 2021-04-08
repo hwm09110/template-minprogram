@@ -1,0 +1,150 @@
+<template>
+  <cover-view wx:class="{{ ['custom-tab-bar-wrap', {isIpx: isIpx}] }}">
+    <cover-view class="tab-list">
+      <cover-view wx:class="{{ ['tab-item', {selected: currentPagePath == item.path}] }}" wx:for="{{tabNavList}}" wx:key="unique">
+        <cover-view class="tap-area" bindtap="handleSwitchTab(item)" >
+          <cover-image class="icon" src="{{ currentPagePath == item.path ? item.selected_icon :item.default_icon}}"></cover-image>
+          <cover-view class="text">{{item.text}}</cover-view>
+        </cover-view>
+      </cover-view>
+    </cover-view>
+  </cover-view>
+</template>
+
+<script>
+import { createComponent } from '@mpxjs/core'
+import store from '../store'
+createComponent({
+  properties: {
+    background: {
+      type: String,
+      value: '#fff'
+    },
+  },
+  data: {
+    tabNavList: [],
+    studentList: [
+      {
+        text: '阅读',
+        default_icon: require('../assets/img/component/custom-tabbar/book-default.png'),
+        selected_icon: require('../assets/img/component/custom-tabbar/book-selected.png'),
+        path: 'pages/index/index'
+      },
+      {
+        text: '在线课堂',
+        default_icon: require('../assets/img/component/custom-tabbar/video-default.png'),
+        selected_icon: require('../assets/img/component/custom-tabbar/video-selected.png'),
+        path: 'pages/onlineclassroom/index'
+      },
+      {
+        text: '我的',
+        default_icon: require('../assets/img/component/custom-tabbar/mine-default.png'),
+        selected_icon: require('../assets/img/component/custom-tabbar/mine-selected.png'),
+        path: 'pages/mine/index'
+      }
+    ],
+    teacherList: [
+      {
+        text: '阅读',
+        default_icon: require('../assets/img/component/custom-tabbar/book-default.png'),
+        selected_icon: require('../assets/img/component/custom-tabbar/book-selected.png'),
+        path: 'packageTeacher/pages/teacher/index'
+      },
+      {
+        text: '在线课堂',
+        default_icon: require('../assets/img/component/custom-tabbar/video-default.png'),
+        selected_icon: require('../assets/img/component/custom-tabbar/video-selected.png'),
+        path: 'packageTeacher/pages/teacher/onlineclassroom'
+      },
+      {
+        text: '我的',
+        default_icon: require('../assets/img/component/custom-tabbar/mine-default.png'),
+        selected_icon: require('../assets/img/component/custom-tabbar/mine-selected.png'),
+        path: 'pages/mine/index'
+      }
+    ],
+    isIpx: false, //是否是iPhone X
+    currentPagePath: '', //当前页面path
+  },
+  computed: {
+      ...store.mapState(['user_role'])
+    },
+  methods: {
+    // 切换tab
+    handleSwitchTab(item) {
+      wx.reLaunch({
+        url: `/${ item.path }`
+      })
+    }
+  },
+  pageLifetimes: {
+    show() {
+      console.log('custom-tabbar in page onshow');
+      this.currentPagePath = getCurrentPages()[getCurrentPages().length - 1].route;
+      console.log('currentPagePath', this.currentPagePath);
+      wx.hideHomeButton();
+    },
+  },
+  attached() {
+    let appInstance = getApp();
+    let { isIpx, systemInfo } = appInstance.globalData;
+    console.log('isIpx', isIpx);
+    this.isIpx = isIpx;
+    this.tabNavList = this.user_role == '2' ? this.teacherList : this.studentList;
+  }
+})
+</script>
+
+<script type="application/json">
+  {
+    "component": true
+  }
+</script>
+
+<style lang="scss">
+.custom-tab-bar-wrap{
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  background-color: #fff;
+  z-index: 999999;
+  padding-top: 8rpx;
+  border-top: 1px solid #ddd;
+  &.isIpx{
+    padding-bottom: 68rpx;
+  }
+  .tab-list{
+    display: flex;
+    .tab-item{
+      height: 98rpx;
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      .tap-area{
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 0 20%;
+        .icon{
+          width: 56rpx;
+          height: 56rpx;
+        }
+        .text{
+          font-size: 20rpx;
+          font-family: PingFangSC-Regular, PingFang SC;
+          font-weight: 400;
+          color: #808C96;
+          margin-top: 4rpx;
+        }
+      }
+      &.selected{
+        .text{
+          color: #49CA5E;
+        }
+      }
+    }
+  }
+}
+</style>
+

@@ -1,0 +1,102 @@
+<template>
+  <view class="modal-mask" style="display:{{show?'block':'none'}}">
+    <view class="modal-wrap">
+      <view class="modal-title">{{title}}</view>
+      <text class="modal-content">{{content}}</text>
+      <view class="modal-operate">
+        <view class="btn" bindtap="handleClose">确定</view>
+      </view>
+    </view>
+  </view>
+</template>
+
+<script>
+import { createComponent } from '@mpxjs/core'
+
+createComponent({
+  properties: {
+    visible: {
+      type: Boolean,
+      value: false
+    },
+    title: {
+      type: String,
+      value: '提示'
+    },
+    content: {
+      type: String,
+      value: ''
+    },
+  },
+  data: {
+    show: false
+  },
+  watch: {
+    visible(newVal, oldVal) {
+      this.show = newVal;
+    }
+  },
+  methods: {
+    handleClose() {
+      this.show = false;
+      this.triggerEvent('close', {});
+    }
+  }
+})
+</script>
+
+<script type="application/json">
+  {
+    "component": true
+  }
+</script>
+
+<style lang="scss">
+@import '../assets/scss/index.scss';
+.modal-mask{
+  background-color: rgba(0,0,0,0.5);
+  width: 100vw;
+  height: 100vh;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 100;
+  .modal-wrap{
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 590rpx;
+    background-color: #fff;
+    border-radius:8rpx;
+    .modal-title{
+      text-align: center;
+      padding: 40rpx 10rpx 0rpx;
+      color: #333;
+      font-weight:600;
+      font-size: 32rpx;
+    }
+    .modal-content{
+      display: block;
+      padding: 30rpx 40rpx;
+      font-size:28rpx;
+      font-family:PingFangSC-Regular,PingFang SC;
+      font-weight:400;
+      line-height: 42rpx;
+      color: #333;
+    }
+    .modal-operate{
+      border-top: 2rpx solid #ddd;
+      .btn{
+        font-size:32rpx;
+        font-family:PingFangSC-Semibold,PingFang SC;
+        font-weight:600;
+        color: $theme_color;
+        text-align: center;
+        padding: 30rpx 0;
+      }
+    }
+  }
+}
+</style>
+

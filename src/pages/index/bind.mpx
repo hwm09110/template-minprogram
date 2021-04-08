@@ -1,0 +1,208 @@
+<template>
+  <view class="page-container">
+    <view class="title">老师登录</view>
+    <view class="form-wrap">
+      <view class="form-item">
+        <input
+          type="number"
+          class="form-input phone"
+          wx:model="{{form.phone}}"
+          placeholder="请输入手机号码"
+          placeholder-style="{{placeholderStyle}}"
+        />
+      </view>
+      <view class="form-item">
+        <input class="form-input phone-code" wx:model="{{form.phoneCode}}" placeholder="请输入验证码" placeholder-style="{{placeholderStyle}}" />
+        <view wx:class="{{ ['get-phone-code', {disable: !canTapGetCodeBtn}] }}" bindtap="handleGetPhoneCode">{{ getCodeBtnText }}</view>
+      </view>
+      <view wx:class="{{ ['login-btn', {disable: !canTapLoginBtn}] }}" bindtap="handleDoLogin">{{ btnText }}</view>
+    </view>
+  </view>
+</template>
+
+<script>
+import { createPage } from '@mpxjs/core';
+import store from '../../store';
+import { isPhone } from '../../utils/index.js';
+
+createPage({
+  data: {
+    form: {
+      phone: '',
+      phoneCode: ''
+    },
+    placeholderStyle: 'color:#bbb;',
+    btnText: '立即登录', //按钮文字
+    getCodeBtnText: '获取验证码', //获取验证码按钮文字  50s后获取
+    canTapGetCodeBtn: true, //获取短信验证码按钮是否可点击
+    timer: null
+  },
+  computed: {
+    //登录按钮是否可点击
+    canTapLoginBtn() {
+      return this.form.phone != '' && isPhone(this.form.phone) && this.form.phoneCode != '';
+    }
+  },
+  onLoad(options) {},
+  methods: {
+    ...store.mapMutations(['setToken']),
+    ...store.mapActions(['getUserInfo']),
+    // 点击获取验证码
+    handleGetPhoneCode() {
+      if (!this.canTapGetCodeBtn) return;
+      if (!this.form.phone) {
+        wx.showToast({
+          title: '手机号码不能为空',
+          icon: 'none'
+        });
+        return false;
+      }
+      if (!isPhone(this.form.phone)) {
+        wx.showToast({
+          title: '手机号码格式不正确',
+          icon: 'none'
+        });
+        return false;
+      }
+      this.requestSendMsg(this.form.phone);
+    },
+    // 倒计时
+    countDown() {
+      let second = 60; //倒计时长
+      this.getCodeBtnText = `${second}s后获取`;
+      this.canTapGetCodeBtn = false;
+      this.timer = setInterval(() => {
+        if (second == 0) {
+          clearInterval(this.timer);
+          this.canTapGetCodeBtn = true;
+          this.getCodeBtnText = '获取验证码';
+          return false;
+        }
+        second--;
+        this.getCodeBtnText = `${second}s后获取`;
+      }, 1000);
+    },
+    // 请求发送短信
+    async requestSendMsg(phone) {
+      const res = await this.$http.getPhoneMessage({ phone });
+      if (res.status === 200) {
+        wx.showToast({
+          title: '短信已发送，请留意查收！',
+          icon: 'none'
+        });
+        this.countDown();
+      }
+    },
+    // 登录
+    async handleDoLogin() {
+      if (!this.canTapLoginBtn) return fasle;
+      if (!this.form.phone) {
+        wx.showToast({
+          title: '手机号码不能为空',
+          icon: 'none'
+        });
+      }
+      if (!isPhone(this.form.phone)) {
+        wx.showToast({
+          title: '手机号码格式不正确',
+          icon: 'none'
+        });
+      }
+      if (!this.form.phoneCode) {
+        wx.showToast({
+          title: '验证码不能为空',
+          icon: 'none'
+        });
+      }
+      const post_data = {
+        code: this.form.phoneCode
+      };
+      const res = await this.$http.bindTeacherAccount(post_data);
+      if (res.status === 200) {
+        const token = res.message;
+        if (token) {
+          this.setToken(token); //更新token
+        }
+        this.bindSuccessHandler();
+      }
+    },
+    //绑定成功后处理
+    async bindSuccessHandler() {
+      await this.getUserInfo(); //获取用户信息
+      wx.switchTab({
+        url: '/pages/index/index'
+      });
+    }
+  }
+});
+</script>
+
+<script name="json">
+module.exports = {
+  navigationBarTitleText: '老师登录',
+  enablePullDownRefresh: false
+};
+</script>
+
+<style lang="scss">
+@import '../../assets/scss/index';
+.page-container {
+  padding: 120rpx 40rpx 40rpx;
+  .title {
+    font-size: 46rpx;
+    font-family: PingFangSC-Semibold, PingFang SC;
+    font-weight: 600;
+    color: #222222;
+  }
+  .form-wrap {
+    margin-top: 60rpx;
+    .form-item {
+      margin-bottom: 40rpx;
+      display: flex;
+      .form-input {
+        height: 90rpx;
+        background: #ffffff;
+        border-radius: 45rpx;
+        border: 2rpx solid #eeeeee;
+        padding-left: 40rpx;
+        flex: 1;
+        color: #222222;
+        font-size: 32rpx;
+      }
+      .get-phone-code {
+        width: 210rpx;
+        height: 90rpx;
+        line-height: 90rpx;
+        text-align: center;
+        background: #ffffff;
+        border-radius: 45rpx;
+        border: 2rpx solid #eeeeee;
+        margin-left: 20rpx;
+        font-size: 32rpx;
+        font-family: PingFangSC-Regular, PingFang SC;
+        font-weight: 400;
+        color: $theme_color;
+        &.disable {
+          color: #abb1b8;
+        }
+      }
+    }
+  }
+  .login-btn {
+    height: 90rpx;
+    line-height: 90rpx;
+    border-radius: 45rpx;
+    margin-top: 30rpx;
+    font-size: 32rpx;
+    font-family: PingFangSC-Medium, PingFang SC;
+    font-weight: 600;
+    color: #fff;
+    text-align: center;
+    background-color: $theme_color;
+    margin-top: 120rpx;
+    &.disable {
+      background-color: #ddd;
+    }
+  }
+}
+</style>

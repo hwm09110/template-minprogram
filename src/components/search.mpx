@@ -1,0 +1,113 @@
+<template>
+  <view class="search-wrap">
+    <view class="search-inner">
+      <input class="search-input" placeholder-style="color:#ABB1B8;" wx:model="{{inputContent}}" bindfocus="handleFocus" bindinput="handleInput" focus="{{autofocus}}" disabled="{{openpage}}" placeholder="{{ placeholder }}"/>
+      <image class="clear-icon" src="{{clear_icon}}" wx:if="{{clearable}}" hidden="{{ inputContent == '' }}" bindtap="handleClear" />
+      <image class="search-icon" src="{{search_icon}}" />
+    </view>
+  </view>
+</template>
+
+<script>
+import { createComponent } from '@mpxjs/core'
+
+createComponent({
+  properties: {
+    placeholder: {
+      type: String,
+      value: '输入搜索关键字'
+    },
+    // true 新打开搜索页
+    openpage: {
+      type: Boolean,
+      value: false
+    },
+    autofocus: {
+      type: Boolean,
+      value: false
+    },
+    // 显示一键清空按钮
+    clearable: {
+      type: Boolean,
+      value: false
+    }
+  },
+  data: {
+    search_icon: require('../assets/img/component/search/search_icon32_gray@2x.png'),
+    clear_icon: require('../assets/img/component/search/icon_more_green@2x.png'),
+    inputContent: ''
+  },
+  methods: {
+    // 返回首页
+    goHome() {
+      wx.switchTab({
+        url: '/pages/index/index'
+      })
+    },
+
+    // 光标聚焦
+    handleFocus() {
+      this.triggerEvent('focus', {});
+    },
+
+    // input
+    handleInput(ev) {
+      console.log(this.inputContent);
+      this.triggerEvent('input', ev);
+    },
+
+    // clear
+    handleClear() {
+      console.log(this.inputContent);
+      this.inputContent = '';
+      this.autofocus = true;
+    }
+  },
+  attached() {
+    let appInstance = getApp();
+  }
+})
+</script>
+
+<script type="application/json">
+  {
+    "component": true
+  }
+</script>
+
+<style lang="scss">
+.search-wrap{
+  .search-inner{
+    position: relative;
+    background: #F6F8FA;
+    padding-right: 60rpx;
+    border-radius: 40rpx;
+    .search-input{
+      height: 70rpx;
+      padding-left: 76rpx;
+      font-size: 28rpx;
+      font-family: PingFangSC-Regular, PingFang SC;
+      font-weight: 400;
+      color: #444;
+    }
+    .clear-icon{
+      position: absolute;
+      right: 26rpx;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 30rpx;
+      height: 30rpx;
+      z-index: 10;
+    }
+    .search-icon{
+      position: absolute;
+      left: 30rpx;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 30rpx;
+      height: 30rpx;
+    }
+  }
+}
+</style>
+

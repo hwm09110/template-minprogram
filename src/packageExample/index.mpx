@@ -1,0 +1,6 @@
+<script name="json">
+const { exampleRoutes } = require('../routes/index')
+module.exports = {
+  pages: exampleRoutes
+}
+</script>

@@ -1,0 +1,159 @@
+<template>
+  <view class="page-container">
+    <view class="logo-info">
+      <!-- <image class="logo-img" src="../../assets/img/icon_logo.png" /> -->
+      <text class="logo-name">小程序</text>
+    </view>
+    <view class="bottom-operate">
+      <button
+        class="login-btn"
+        type="primary"
+        open-type="getUserInfo"
+        bindgetuserinfo="handleGetUserInfo"
+      >
+        {{ btnText }}
+      </button>
+      <view class="tips"> 请授权登录后使用小程序 </view>
+    </view>
+  </view>
+</template>
+
+<script>
+import { createPage } from '@mpxjs/core'
+import store from '../../store'
+import { KEY, NAMESPACE } from '../../common/apiConfig.js'
+
+createPage({
+  data: {
+    btnText: '授权登录', //按钮文字
+    fromSharePath: '' //分享出去的地址（分享出去的地址，需要登陆才能访问，登陆完再跳转分享页）和登录成功要跳回的页面地址
+  },
+  computed: {
+    // ...store.mapState(["userScoreInfo", "userAccountInfo"])
+  },
+  onLoad(options) {
+    // if(options.fromPath) {
+    //   this.fromSharePath = decodeURIComponent(options.fromPath);
+    // }
+  },
+  methods: {
+    ...store.mapMutations(['setUserWxInfo', 'setToken']),
+    ...store.mapActions(['getUserInfo']),
+
+    // 查看用户协议
+    handleLookAgreement() {
+      wx.navigateTo({
+        url: '/pages/index/agreement'
+      })
+    },
+
+    // 处理获取用户信息
+    async handleGetUserInfo(ev) {
+      console.log(ev)
+      if (ev.detail.errMsg === 'getUserInfo:ok') {
+        let { encryptedData, iv, userInfo } = ev.detail
+        wx.setStorageSync('userWxInfo', userInfo) //缓存用户微信信息
+        this.setUserWxInfo(userInfo)
+        await this.doWxLogin()
+        const res = await this.getUserInfo()
+        console.log('getUserInfo', res)
+        if (res.status === 200) {
+          const { teachers } = res.message
+          // teachers为空，表示还没绑定手机号
+          if (teachers.length == 0) {
+            wx.navigateTo({
+              url: '/pages/index/bind'
+            })
+          } else {
+            wx.switchTab({
+              url: '/pages/index/index'
+            })
+          }
+        }
+      } else {
+      }
+    },
+
+    // 获取code， 进行微信登录
+    async doWxLogin() {
+      const code = await this.$http.doWechatLogin()
+      if (code) {
+        const post_data = {
+          key: KEY,
+          namespace: NAMESPACE,
+          code: code
+        }
+        const res = await this.$http.doLoginByWechat(post_data)
+        console.log(res)
+        if (res.status === 200) {
+          this.loginSuccessHandler(res.message)
+        }
+      }
+    },
+
+    //登录成功后处理
+    loginSuccessHandler(info) {
+      const { token, extra } = info
+      this.setToken(token)
+      wx.setStorageSync('extra', extra)
+    }
+  }
+})
+</script>
+
+<script name="json">
+module.exports = {
+  navigationBarTitleText: '小程序',
+  enablePullDownRefresh: false
+}
+</script>
+
+<style lang="scss">
+@import '../../assets/scss/index';
+.page-container {
+  padding-top: 140rpx;
+  .logo-info {
+    text-align: center;
+    .logo-img {
+      display: inline-block;
+      width: 160rpx;
+      height: 160rpx;
+    }
+    .logo-name {
+      display: block;
+      font-size: 40rpx;
+      font-family: PingFangSC-Semibold, PingFang SC;
+      font-weight: 600;
+      color: #222222;
+      line-height: 50rpx;
+      margin-top: 30rpx;
+    }
+  }
+  .bottom-operate {
+    position: fixed;
+    left: 0;
+    bottom: 136rpx;
+    width: 100%;
+    .login-btn {
+      width: 300rpx;
+      height: 90rpx;
+      line-height: 90rpx;
+      margin: 0 auto;
+      background: $theme_color;
+      border-radius: 45rpx;
+      margin-bottom: 30rpx;
+      font-size: 34rpx;
+      font-family: PingFangSC-Medium, PingFang SC;
+      font-weight: 500;
+      color: #fff;
+    }
+    .tips {
+      font-size: 28rpx;
+      font-family: PingFangSC-Regular, PingFang SC;
+      font-weight: 400;
+      color: #444444;
+      text-align: center;
+    }
+  }
+}
+</style>

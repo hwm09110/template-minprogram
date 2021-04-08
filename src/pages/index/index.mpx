@@ -1,0 +1,85 @@
+<template>
+  <view class="page-container">
+    <!-- banner B -->
+    <view class="banner" wx:if="{{bannerList.length > 0}}">
+      <swiper-banner list="{{bannerList}}" bind:click="handleBannerClick"></swiper-banner>
+    </view>
+    <!-- banner E -->
+    <!-- 网络异常tips B -->
+    <off-network
+      wx:model="{{isShowOffNetworkTips}}"
+      bindrefresh="handlePageRefresh"
+    ></off-network>
+    <!-- 网络异常tips E -->
+  </view>
+</template>
+
+<script>
+import { createPage } from '@mpxjs/core'
+import store from '../../store'
+
+createPage({
+  data: {
+    // banner
+    bannerList: [
+      {
+        img: require('../../assets/img/index/home_banner_1.png')
+      },
+      {
+        img: require('../../assets/img/index/home_banner_2.png')
+      },
+      {
+        img: require('../../assets/img/index/home_banner_3.png')
+      }
+    ]
+  },
+  computed: {
+    ...store.mapState(['isLogin', 'isShowOffNetworkTips'])
+  },
+  watch: {},
+  onLoad(optinos) {},
+  async onShow() {
+    this.init()
+  },
+  onShareAppMessage: function (options) {
+    return {
+      title: '小程序'
+    }
+  },
+  methods: {
+    ...store.mapMutations(['setOffNetworkStatus']),
+
+    async init() {},
+
+    // 页面刷新
+    handlePageRefresh() {
+      this.setOffNetworkStatus(false) //隐藏断网提示【测试】
+      this.init()
+    },
+
+    // 点击banner轮播
+    handleBannerClick(item) {
+      console.log('item>>', item)
+      this.setOffNetworkStatus(true) //出现断网提示【测试】
+    }
+  }
+})
+</script>
+
+<script name="json">
+module.exports = {
+  navigationBarTitleText: '小程序模板',
+  enablePullDownRefresh: false
+}
+</script>
+
+<style lang="scss">
+@import '../../assets/scss/index.scss';
+.page-container {
+  position: relative;
+  background: #f5f7f9;
+  min-height: 100vh;
+  padding: 30rpx;
+  box-sizing: border-box;
+}
+</style>

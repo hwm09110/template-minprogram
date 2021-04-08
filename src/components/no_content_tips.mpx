@@ -1,0 +1,48 @@
+<template>
+  <view class="no-data-tips">
+    <image class="img" src="../assets/img/home_icon_blank@2x.png" />
+    <view class="text" wx:if="{{content != ''}}">{{content}}</view>
+  </view>
+</template>
+
+<script>
+import { createComponent } from '@mpxjs/core'
+
+createComponent({
+  properties: {
+    content: {
+      type: String,
+      value: '暂无相关内容'
+    }
+  },
+  methods: {
+  },
+  attached() {
+  }
+})
+</script>
+
+<script type="application/json">
+  {
+    "component": true
+  }
+</script>
+
+<style lang="scss">
+.no-data-tips{
+  padding: 180rpx 60rpx 60rpx;
+  text-align: center;
+  .img{
+    width: 342rpx;
+    height:204rpx;
+  }
+  .text{
+    margin-top: 30rpx;
+    font-size: 28rpx;
+    font-family: PingFangSC-Regular, PingFang SC;
+    font-weight: 400;
+    color: #AAAAAA;
+  }
+}
+</style>
+

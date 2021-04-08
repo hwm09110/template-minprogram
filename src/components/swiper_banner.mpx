@@ -1,0 +1,111 @@
+<template>
+  <view class="banner">
+    <view class="swiper-wrap">
+      <swiper
+        class="banner-swiper"
+        bindchange="handleBannerChange"
+        autoplay="{{swiperOptions.autoplay}}"
+        interval="{{swiperOptions.interval}}"
+        duration="{{swiperOptions.duration}}"
+      >
+        <block wx:for="{{bannerList}}" wx:key="unique">
+          <swiper-item bindtap="handleClick(item)">
+            <image class="swiper-item" src="{{item.img}}" />
+          </swiper-item>
+        </block>
+      </swiper>
+      <view class="indicator-dots" wx:if="{{bannerList.length > 1}}">
+        <view
+          class="dot {{item.isActive?'active':''}}"
+          wx:for="{{bannerList}}"
+          wx:key="*this"
+        ></view>
+      </view>
+    </view>
+  </view>
+</template>
+
+<script>
+import { createComponent } from '@mpxjs/core'
+
+createComponent({
+  properties: {
+    list: {
+      type: Array,
+      value: []
+    },
+    swiperOptions: {
+      type: Object,
+      value: {
+        autoplay: true,
+        interval: 3000,
+        duration: 500
+      }
+    }
+  },
+  data: {
+    bannerList: []
+  },
+  attached: function () {
+    this.bannerList = this.list.map((item, index) => {
+      return {
+        img: item.img,
+        isActive: index == 0 ? true : false
+      }
+    })
+  },
+  methods: {
+    handleBannerChange(ev) {
+      let { current, source } = ev.detail
+      this.bannerList.forEach((item, index) => {
+        item.isActive = current == index ? true : false
+      })
+    },
+    handleClick(item) {
+      this.triggerEvent('click', item)
+    }
+  }
+})
+</script>
+
+<script type="application/json">
+{
+  "component": true
+}
+</script>
+
+<style lang="scss">
+@import '../assets/scss/index.scss';
+.banner {
+  .swiper-wrap {
+    position: relative;
+    .banner-swiper {
+      height: 290rpx;
+    }
+    .swiper-item {
+      height: 100%;
+      width: 100%;
+      border-radius: 10rpx;
+    }
+    .indicator-dots {
+      display: flex;
+      justify-content: center;
+      position: absolute;
+      left: 50%;
+      bottom: 20rpx;
+      transform: translateX(-50%);
+      .dot {
+        width: 14rpx;
+        height: 14rpx;
+        border-radius: 100%;
+        background-color: #ddd;
+        margin: 0 10rpx;
+        opacity: 0.4;
+        &.active {
+          opacity: 1;
+        }
+      }
+    }
+  }
+}
+</style>

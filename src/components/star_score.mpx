@@ -1,0 +1,49 @@
+<template>
+  <view class="star-score">
+    <image class="icon" src="{{(score - m*2 > 0 ? (score - m*2 > 1.5 ? star_full_icon :  star_half_icon) : default_icon)}}" wx:for="{{5}}" wx:for-item="m" wx:key="unique" />
+  </view>
+</template>
+
+<script>
+import { createComponent } from '@mpxjs/core'
+
+createComponent({
+  properties: {
+    score: {
+      type: Number,
+      value: 6
+    }
+  },
+  data: {
+    default_icon: require('../assets/img/index/book/icon_star_gray@2x.png'),
+    star_full_icon: require('../assets/img/index/book/icon_star_yellow@2x.png'),
+    star_half_icon: require('../assets/img/index/book/icon_star_helf@2x.png')
+  },
+  methods: {
+  },
+  attached() {
+  }
+})
+</script>
+
+<script type="application/json">
+  {
+    "component": true
+  }
+</script>
+
+<style lang="scss">
+.star-score{
+  display: flex;
+  > .icon{
+    display: block;
+    width: 40rpx;
+    height: 40rpx;
+    margin-right: 6rpx;
+    &:last-child{
+      margin-right: 0;
+    }
+  }
+}
+</style>
+

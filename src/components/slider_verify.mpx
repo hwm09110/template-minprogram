@@ -1,0 +1,269 @@
+<template>
+  <view class="slide-verify-wrap" wx:if={{show}}>
+    <view class="slide-mask"></view>
+    <view class="slide-verify-box">
+      <view id="img-wrap" class="img-wrap">
+        <view class="img-box">
+          <view class="bg-img-box">
+            <image class="bg-img" src="{{imgSrc}}" mode="widthFix" />
+          </view>
+          <view class="move-img-box" style="left:{{pos.left}}px">
+            <image class="move-img" src="{{imgSrc}}" mode="widthFix" />
+          </view>
+        </view>
+      </view>
+      <view class="slide-wrap">
+        <movable-area class="moveArea">
+          <movable-view wx:if="{{refreshSlideBtn}}" direction="horizontal" class="slide-block" bindchange="handleSlideMove" bindtouchend="handleTouchend">
+            <image class="slide-btn" src="../assets/img/component/slide-icon@2x.png" />
+          </movable-view>
+          <view class="tips">拖动左边滑块完成上方拼图</view>
+        </movable-area>
+      </view>
+      <view class="bottom-operate">
+        <image class="close-btn" src="../assets/img/component/close-icon.png" bindtap="handleClose" />
+        <image class="refresh-btn" src="../assets/img/component/refresh-icon.png" bindtap="handleRefresh" />
+      </view>
+    </view>
+  </view>
+</template>
+
+<script>
+  import { createComponent } from '@mpxjs/core'
+
+  createComponent({
+    properties: {
+      visible: {
+        type: Boolean,
+        value: false
+      }
+    },
+    data: {
+      show: false,
+      imgSrc: '',
+      pos: {
+        left: 0
+      },
+      originalWidth: 436, //接口返回图片的宽度
+      bgBoxWidth: 0, //背景图片容器宽度
+      refreshSlideBtn: true,
+      move_x: 0,
+    },
+    watch: {
+      visible(newVal, oldVal) {
+        this.show = newVal;
+        newVal ? this._init() : null;
+      }
+    },
+    onLoad() {
+
+    },
+    methods: {
+      async _init() {
+        this.move_x = 0;
+        this.pos.left = 0;
+        await this.getBgImage();
+        await this.scalcBgImageWidth();
+      },
+
+      // 拖动
+      handleSlideMove(event) {
+        let { x, y, source } = event.detail;
+        // let move_dist = x - 15 < 0 ? 0 : (x - 15);
+        // console.log('move_dist', move_dist);
+        this.move_x = x;
+        this.pos.left = `${ x }`;
+      },
+
+      // 手离开屏幕
+      handleTouchend() {
+        console.log("手离开屏幕了");
+        this.checkIsPass(this.move_x);
+      },
+
+      // 关闭
+      handleClose() {
+        this.show = false;
+        this.triggerEvent('close');
+      },
+
+      // 计算拼图背景图片的宽度
+      async scalcBgImageWidth() {
+        return new Promise((resolve, reject)=>{
+          const query = wx.createSelectorQuery().in(this);
+          query.select('#img-wrap').boundingClientRect();
+          query.exec((res) => {
+            console.log(res);
+            let width = res[0]['width'];
+            this.bgBoxWidth = width;
+            resolve(width);
+          });
+        })
+      },
+
+      // 计算真实滑动距离
+      scalcRealDist(originalDist) {
+        let ratio = (this.originalWidth / this.bgBoxWidth).toFixed(3);
+        console.log('ratio', ratio);
+        console.log('originalDist', originalDist);
+        let realDist = (parseFloat(ratio)) * (originalDist);
+        console.log('realDist', realDist);
+        realDist = Math.ceil(realDist);
+        return realDist;
+      },
+
+      // 刷新
+      handleRefresh() {
+        this.getBgImage();
+        this.pos.left = 0;
+        this.refreshSlideBtn = false;
+        this.move_x = 0;
+        setTimeout(() => {
+          this.refreshSlideBtn = true;
+        }, 30);
+      },
+
+      // 获取拼图背景图片
+      async getBgImage() {
+        return this.$http.createSlideImg().then(res =>{
+          if(res.code === '200') {
+            this.imgSrc = res.extraData;
+          }
+        });
+      },
+
+      // 校验是否匹配
+      checkIsPass(distance) {
+        let realDist = this.scalcRealDist(distance);
+        this.$http.checkSlideCode({slide_captcha: realDist}).then(res => {
+          console.log('---校验是否匹配---', res);
+          if(res.code === '200') {
+            this.triggerEvent('pass', res.extraData);
+          }else if(res.code === '2302'){
+            this.handleRefresh();
+          }else{
+            wx.showToast({title:res.message, icon:'none'});
+          }
+        });
+      }
+    }
+  })
+</script>
+
+<script name="json">
+  module.exports = {
+    component: true
+  }
+</script>
+
+<style lang="scss">
+.slide-verify-wrap{
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100vh;
+  width: 100vw;
+  .slide-mask{
+    position: absolute;
+    left: 0;
+    top: 0;
+    width:100vw;
+    height:100vh;
+    background-color: rgba(0,0,0,0.5);
+    z-index: 9;
+  }
+  .slide-verify-box{
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 590rpx;
+    // height: 550rpx;
+    padding: 20rpx 20rpx 28rpx;
+    box-sizing: border-box;
+    background-color: #fff;
+    border-radius:10rpx;
+    z-index: 10;
+    .img-wrap{
+      width: 550rpx;
+      height: 348rpx;
+      .img-box{
+        position: relative;
+        overflow: hidden;
+        height: 100%;
+        .bg-img-box{
+          width: 100%;
+          height: 100%;
+          overflow: hidden;
+          font-size: 0;
+          .bg-img{
+            width: 100%;
+            height: 100%;
+          }
+        }
+        .move-img-box{
+          width: 100%;
+          height: 100%;
+          overflow: hidden;
+          position: absolute;
+          top: 0;
+          left: 0;
+          font-size: 0;
+          .move-img{
+            position: absolute;
+            left: 0;
+            top: -100%;
+            width: 100%;
+            height: 100%;
+          }
+        }
+      }
+    }
+    .slide-wrap{
+      margin-top: 26rpx;
+      padding-bottom: 26rpx;
+      border-bottom: 2rpx solid #eee;
+      .moveArea{
+        width: 100%;
+        height: 72rpx;
+        line-height: 72rpx;
+        background-color: #EAEAEA;
+        border-radius: 36rpx;
+        .tips{
+          padding-right: 20rpx;
+          font-size:28rpx;
+          font-family:PingFangSC-Regular,PingFang SC;
+          font-weight:400;
+          color:#999;
+          padding-left: 120rpx;
+        }
+      }
+      .slide-block{
+        top: -10rpx;
+        width:90rpx;
+        height:90rpx;
+        border-radius: 100%;
+        background:#fff;
+        box-shadow:0px 5px 8px 0px rgba(178,178,178,0.5);
+        border:2rpx solid rgba(230,230,230,1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        .slide-btn{
+          width:40rpx;
+          height:40rpx;
+        }
+      }
+    }
+    .bottom-operate{
+      padding-top: 26rpx;
+      .close-btn,
+      .refresh-btn{
+        width: 40rpx;
+        height: 40rpx;
+        margin-right: 30rpx;
+      }
+    }
+  }
+}
+</style>

@@ -1,0 +1,39 @@
+<template>
+  <view class="no-result-wrap">
+    <image class="img" src="../assets/img/component/no-search-result.png" />
+  </view>
+</template>
+
+<script>
+import { createComponent } from '@mpxjs/core'
+
+createComponent({
+  data: {
+  },
+  methods: {
+  },
+  attached() {
+  }
+})
+</script>
+
+<script type="application/json">
+  {
+    "component": true
+  }
+</script>
+
+<style lang="scss">
+.no-result-wrap{
+  text-align: center;
+  font-size:28rpx;
+  font-family:PingFangSC-Regular,PingFang SC;
+  font-weight:400;
+  padding: 40rpx 0;
+  .img{
+    width: 750rpx;
+    height: 488rpx;
+  }
+}
+</style>
+

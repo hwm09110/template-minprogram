@@ -1,0 +1,16 @@
+<template>
+  <web-view src="{{link}}"></web-view>
+</template>
+<script>
+import { createPage } from '@mpxjs/core'
+import store from '../../store'
+
+createPage({
+  data: {
+    link: ''
+  },
+  onLoad(options) {
+    this.link = options.url ? options.url : ''
+  }
+})
+</script>

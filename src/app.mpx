@@ -1,0 +1,183 @@
+<script>
+import mpx from '@mpxjs/core'
+import request from './request/index'
+import store from './store/index'
+import { setSharePagePath } from './common/shareHelper'
+
+mpx.prototype.$http = request
+
+mpx.createApp({
+  globalData: {
+    heartbeatTimer: null, //心跳定时器
+    isIpx: false, //是否是iphoneX
+    isForceUpdate: true, //有新版时，是否强制更新
+    systemInfo: null, // 用户系统信息
+    canUseCustomNav: false // 是否可以使用自定义导航条
+  },
+  onShow(options) {
+    // 间隔20分钟，刷新文件上传下载token
+    this.globalData.heartbeatTimer = setInterval(async () => {
+      // await store.dispatch('getDownloadInfo')
+    }, 20 * 60 * 1000)
+  },
+  onHide() {},
+  async onLaunch(options) {
+    await store.dispatch('getDownloadInfo')
+    this.__init()
+  },
+  onPageNotFound() {
+    // 打开不存在的页面是，重定向到首页
+    wx.switchTab({
+      url: '/pages/index/index'
+    })
+  },
+  async __init() {
+    this.getSysInfo()
+    this.checkForUpdateApp() //检查是否有新版本
+  },
+
+  // 设置分享页面path
+  setSharePath(options) {
+    return setSharePagePath(options)
+  },
+
+  // 获取系统信息
+  getSysInfo() {
+    wx.getSystemInfo({
+      success: (res) => {
+        console.log(res)
+        //model中包含着设备信息
+        if (res.errMsg == 'getSystemInfo:ok') {
+          let { model, SDKVersion, version } = res
+          this.globalData.systemInfo = res
+          if (model.search('iPhone X') != -1) {
+            this.globalData.isIpx = true
+          } else {
+            this.globalData.isIpx = false
+          }
+
+          let nVersion = parseInt(version.split('.').join('')) //微信版本号
+          let nSDKVersion = parseInt(SDKVersion.split('.').join('')) //基础库版本
+
+          // 判断是否支持单页面自定义导航
+          if (nVersion > 700 && nSDKVersion > 243) {
+            this.globalData.canUseCustomNav = true
+          }
+        }
+      }
+    })
+  },
+
+  // 新版本检查更新提示
+  checkForUpdateApp() {
+    if (wx.canIUse('getUpdateManager')) {
+      const updateManager = wx.getUpdateManager()
+      updateManager.onCheckForUpdate((res) => {
+        console.log('onCheckForUpdate====', res)
+        // 请求完新版本信息的回调
+        if (res.hasUpdate) {
+          console.log('res.hasUpdate====', res.hasUpdate)
+          wx.showModal({
+            title: '更新提示',
+            content: '检测到新版本，是否下载新版本并重启小程序？',
+            success: (res) => {
+              if (res.confirm) {
+                //2. 用户确定下载更新小程序，小程序下载及更新静默进行
+                this.downLoadAndUpdate(updateManager)
+              } else if (res.cancel) {
+                console.log(
+                  'this.globalData.isForceUpdate ===',
+                  this.globalData.isForceUpdate
+                )
+                //用户点击取消按钮的处理，如果需要强制更新，则给出二次弹窗，如果不需要，则这里的代码都可以删掉了
+                if (this.globalData.isForceUpdate) {
+                  wx.showModal({
+                    title: '温馨提示~',
+                    content: '本次版本更新涉及到新的功能添加，旧版本无法正常访问的哦~',
+                    showCancel: false, //隐藏取消按钮
+                    confirmText: '确定更新', //只保留确定更新按钮
+                    success: (res) => {
+                      if (res.confirm) {
+                        //下载新版本，并重新应用
+                        this.downLoadAndUpdate(updateManager)
+                      }
+                    }
+                  })
+                }
+              }
+            }
+          })
+        }
+      })
+    } else {
+      // 如果希望用户在最新版本的客户端上体验您的小程序，可以这样子提示
+      wx.showModal({
+        title: '提示',
+        content: '当前微信版本过低，无法使用该功能，请升级到最新微信版本后重试。'
+      })
+    }
+  },
+
+  // 下载新版本并重启小程序
+  downLoadAndUpdate(updateManager) {
+    wx.showLoading()
+    //静默下载更新小程序新版本
+    updateManager.onUpdateReady(function () {
+      wx.hideLoading()
+      //新的版本已经下载好，调用 applyUpdate 应用新版本并重启
+      updateManager.applyUpdate()
+    })
+
+    updateManager.onUpdateFailed(function () {
+      wx.hideLoading()
+      // 新的版本下载失败
+      wx.showModal({
+        title: '已经有新版本了哟~',
+        content: '新版本已经上线啦~，请您删除当前小程序，重新搜索打开哟~'
+      })
+    })
+  }
+})
+</script>
+
+<!--JSON还可通过以下形式编写-->
+
+<script name="json">
+// 可以写注释，通过defs注入的常量做一些判断之类的操作
+const { allRoutes } = require('./routes/index')
+module.exports = {
+  pages: [...allRoutes],
+  packages: ['./packageExample/index?root=packageExample'],
+  tabBar: {
+    color: '#808C96',
+    selectedColor: '#6149F1',
+    list: [
+      {
+        pagePath: 'pages/index/index',
+        text: '首页',
+        iconPath: './assets/img/index/tabbar/home-icon-default.png',
+        selectedIconPath: './assets/img/index/tabbar/home-icon-selected.png'
+      },
+      {
+        pagePath: 'pages/mine/index',
+        text: '我的',
+        iconPath: './assets/img/index/tabbar/mine-icon-default.png',
+        selectedIconPath: './assets/img/index/tabbar/mine-icon-selected.png'
+      }
+    ]
+  },
+  window: {
+    navigationBarBackgroundColor: '#fff',
+    navigationBarTextStyle: 'black',
+    enablePullDownRefresh: false
+  },
+  usingComponents: {
+    toast: './components/toast.mpx',
+    'base-modal': './components/base_modal.mpx',
+    'swiper-banner': './components/swiper_banner.mpx',
+    calendar: './components/calendar.mpx',
+    'no-content-tips': './components/no_content_tips',
+    'off-network': './components/off_network'
+  }
+}
+</script>
