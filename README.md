@@ -1,6 +1,6 @@
-# zt-afterclass-teacher-minprogram
+# template-minprogram
 
-> 430托管小程序【教师端】
+> 小程序模板
 
 ## Dev
 
