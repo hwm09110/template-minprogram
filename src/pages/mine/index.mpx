@@ -25,9 +25,7 @@ createPage({
     ...store.mapState(['isLogin'])
   },
   onLoad() {},
-  onShow() {
-    this.init()
-  },
+  onShow() {},
   methods: {}
 })
 </script>
@@ -35,9 +33,8 @@ createPage({
 <script name="json">
 module.exports = {
   enablePullDownRefresh: false,
-  navigationBarTextStyle: 'white',
-  navigationBarTitleText: '我的',
-  navigationBarBackgroundColor: '#6750F4'
+  navigationBarTextStyle: 'black',
+  navigationBarTitleText: '我的'
 }
 </script>
 <style lang="scss">
